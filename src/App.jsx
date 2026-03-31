@@ -115,6 +115,7 @@ export default function App() {
             {currentView === 'opportunities' && <OpportunitiesView clients={clients} setView={setCurrentView} addToast={addToast} />}
 
             {currentView === 'billing' && <BillingAccountView setView={setCurrentView} addToast={addToast} />}
+            {currentView === 'users' && <UserManagementView setView={setCurrentView} addToast={addToast} clients={clients} />}
 
             {/* Global Toasts */}
             <div className="toast-container">{toasts.map(t => <div key={t.id} className={`toast ${t.type}`}><Check size={18} /> {t.msg}</div>)}</div>
@@ -158,6 +159,11 @@ function HomePageView({ userName, setView }) {
                     <div className="home-card-icon" style={{ background: '#FDF6B2', color: '#723B13' }}><CreditCard size={32} /></div>
                     <div className="home-card-title">Billing & Account</div>
                     <span className="text-sm text-muted">Manage firm resources, subscriptions, and administrative settings.</span>
+                </div>
+                <div className="home-card" onClick={() => setView('users')}>
+                    <div className="home-card-icon" style={{ background: '#E0E7FF', color: '#3730A3' }}><CheckSquare size={32} /></div>
+                    <div className="home-card-title">User Management</div>
+                    <span className="text-sm text-muted">Manage JCKCA staff role permissions, credentials, and client access logic.</span>
                 </div>
             </div>
         </main>
@@ -1041,4 +1047,138 @@ function BillingAccountView({ setView, addToast }) {
         </main>
     );
 }
+
+// =========================================================================
+// USER MANAGEMENT VIEW
+// =========================================================================
+
+function UserManagementView({ setView, addToast, clients }) {
+    const [staff, setStaff] = useState([
+        { id: 1, name: 'Moksh', email: 'moksh@jckca.in', role: 'Admin', assigned: [1, 2, 3, 4] },
+        { id: 2, name: 'Arpit', email: 'arpit@jckca.in', role: 'Admin', assigned: [3, 5, 8] },
+        { id: 3, name: 'Riya Mehta', email: 'riya.mehta@jckca.in', role: 'User', assigned: [1, 2] },
+        { id: 4, name: 'Rahul Sharma', email: 'rahul.s@jckca.in', role: 'User', assigned: [4] },
+        { id: 5, name: 'Priya Iyer', email: 'priya.i@jckca.in', role: 'User', assigned: [] },
+        { id: 6, name: 'Kushal Gupta', email: 'kushal.g@jckca.in', role: 'User', assigned: [6, 7] }
+    ]);
+    const [assignModal, setAssignModal] = useState(null); // holds user object targeted
+    const [tempAssignments, setTempAssignments] = useState([]);
+
+    const openAssign = (user) => {
+        setAssignModal(user);
+        setTempAssignments([...user.assigned]);
+    };
+
+    const toggleAssignment = (clientId) => {
+        if (tempAssignments.includes(clientId)) {
+            setTempAssignments(tempAssignments.filter(id => id !== clientId));
+        } else {
+            setTempAssignments([...tempAssignments, clientId]);
+        }
+    };
+
+    const saveAssignments = () => {
+        setStaff(staff.map(s => s.id === assignModal.id ? { ...s, assigned: tempAssignments } : s));
+        addToast(`Client mapping routing securely saved dynamically for ${assignModal.name}.`, 'success');
+        setAssignModal(null);
+    };
+
+    const handleDelete = (uid) => {
+        setStaff(staff.filter(s => s.id !== uid));
+        addToast('User completely wiped from network architecture payload natively.', 'success');
+    };
+
+    return (
+        <main className="main-content animate-slide-down" style={{ maxWidth: '1200px', margin: '0 auto' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    <button className="btn-icon" onClick={() => setView('homepage')}><ArrowLeft /></button>
+                    <div>
+                        <h2 className="text-h1">User Management</h2>
+                        <div className="text-muted font-semibold">Organize JCKCA Internal Associates Globally</div>
+                    </div>
+                </div>
+                <button className="btn-primary" onClick={() => addToast('Add Modal Prompt Initiated Native Hook')}><Users style={{ display: 'inline', marginRight: '8px' }} size={18} /> Add New User (JCKCA Staff)</button>
+            </div>
+
+            <div className="table-card">
+                <table className="spreadsheet-table" style={{ border: 'none' }}>
+                    <thead>
+                        <tr>
+                            <th>Associate Name / Email</th>
+                            <th>Node Permissions</th>
+                            <th>Active Mapped Clients</th>
+                            <th>Administrative Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {staff.map(user => (
+                            <tr key={user.id}>
+                                <td>
+                                    <div className="font-semibold text-blue">{user.name}</div>
+                                    <div className="text-sm text-muted">{user.email}</div>
+                                </td>
+                                <td>
+                                    <span className={`badge ${user.role === 'Admin' ? 'badge-blue' : 'badge-grey'}`} style={{ fontSize: '0.85rem' }}>
+                                        {user.role} Hierarchy Access
+                                    </span>
+                                </td>
+                                <td>
+                                    <button className="btn-outline" style={{ padding: '0.4rem 1rem', fontSize: '0.85rem' }} onClick={() => openAssign(user)}>
+                                        Manage {user.assigned.length} Assurances <FileTerminal size={14} style={{ display: 'inline', marginLeft: '4px' }} />
+                                    </button>
+                                </td>
+                                <td>
+                                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                        <button className="btn-outline" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem', color: '#4F46E5', borderColor: '#C7D2FE' }} title="Send Reset Magic Link" onClick={() => addToast('Password mapping reset vector fired via Mailgun.', 'success')}><Key size={14} style={{ display: 'inline', marginRight: '4px' }} /> Reset Auth</button>
+                                        <button className="btn-outline" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem', color: 'var(--status-red)', borderColor: 'var(--status-red)' }} title="Revoke Permissions completely" onClick={() => handleDelete(user.id)}><X size={14} style={{ display: 'inline', marginRight: '4px' }} /> Terminate</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+
+            {assignModal && (
+                <div className="modal-overlay" onClick={() => setAssignModal(null)}>
+                    <div className="modal-content animate-slide-down" onClick={e => e.stopPropagation()} style={{ maxWidth: '600px', maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
+                        <div className="modal-header" style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '1rem', marginBottom: '1rem' }}>
+                            <div>
+                                <h2 className="text-h1 text-blue" style={{ fontSize: '1.25rem' }}>Client Directory Routing Control</h2>
+                                <div className="text-sm text-muted">Assigning mapped visibility limits directly anchoring {assignModal.name}</div>
+                            </div>
+                            <button className="btn-icon" onClick={() => setAssignModal(null)}><X size={20} /></button>
+                        </div>
+                        <div className="modal-body" style={{ overflowY: 'auto' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                {clients.map(client => {
+                                    const isAssigned = tempAssignments.includes(client.id);
+                                    return (
+                                        <div key={client.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem', borderRadius: '8px', border: isAssigned ? '1px solid #C7D2FE' : '1px solid var(--border-color)', background: isAssigned ? '#EEF2FF' : 'white', cursor: 'pointer' }} onClick={() => toggleAssignment(client.id)}>
+                                            <div>
+                                                <div className="font-semibold text-blue">{client.companyName}</div>
+                                                <div className="text-xs text-muted">Entity Tracker: {client.type} • Contact: {client.contactPerson}</div>
+                                            </div>
+                                            <div>
+                                                <div style={{ width: '24px', height: '24px', borderRadius: '6px', border: isAssigned ? 'none' : '2px solid #D1D5DB', background: isAssigned ? '#4F46E5' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                    {isAssigned && <Check size={16} color="white" strokeWidth={3} />}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )
+                                })}
+                            </div>
+                        </div>
+                        <div className="modal-footer" style={{ marginTop: '1.5rem', display: 'flex', justifyContent: 'flex-end', gap: '1rem', borderTop: '1px solid var(--border-color)', paddingTop: '1.5rem' }}>
+                            <button className="btn-outline" onClick={() => setAssignModal(null)}>Discard Mapping</button>
+                            <button className="btn-primary" onClick={saveAssignments}><CheckSquare style={{ display: 'inline', marginRight: '6px' }} /> Anchor Assurances & Save</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </main>
+    )
+}
+
 
