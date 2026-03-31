@@ -67,7 +67,7 @@ export default function App() {
             {/* HEADER */}
             <header className="topbar">
                 <div className="brand" style={{ cursor: 'pointer', padding: '0' }} onClick={() => setCurrentView('homepage')}>
-                    <img src="/logo.jpg" alt="JC Kabra & Associates" style={{ height: '56px', objectFit: 'contain' }} />
+                    <img src="/logo.jpg" alt="JC Kabra & Associates" style={{ height: '72px', objectFit: 'contain' }} />
                 </div>
                 <div className="topbar-right">
                     <div style={{ position: 'relative', cursor: 'pointer', color: 'var(--text-muted)' }} onClick={() => setShowNotifications(!showNotifications)}>
@@ -934,7 +934,7 @@ function LoginView({ onLogin, email, setEmail, password, setPassword }) {
         <div className="auth-wrapper animate-slide-down">
             <div className="auth-card">
                 <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-                    <img src="/logo.jpg" alt="JC Kabra & Associates" style={{ height: '120px', objectFit: 'contain', marginBottom: '1rem' }} />
+                    <img src="/logo.jpg" alt="JC Kabra & Associates" style={{ height: '160px', objectFit: 'contain', marginBottom: '0.75rem' }} />
                     <div className="text-muted font-semibold" style={{ fontSize: '0.95rem', letterSpacing: '0.5px' }}>Practice Management Portal</div>
                 </div>
                 <form onSubmit={onLogin} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>

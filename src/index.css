@@ -237,7 +237,8 @@ select:focus {
 .topbar {
     background: var(--bg-card);
     border-bottom: 1px solid var(--border-color);
-    padding: 1rem 2rem;
+    padding: 0.5rem 2rem;
+    min-height: 80px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -547,23 +548,128 @@ tr:hover {
     text-align: center;
     margin-bottom: 1.5rem;
 }
+
 /* New Features CSS */
-.tabs { display: flex; gap: 1rem; border-bottom: 1px solid var(--border-color); margin-bottom: 1.5rem; }
-.tab { padding: 0.5rem 1rem; cursor: pointer; color: var(--text-muted); font-weight: 500; border-bottom: 2px solid transparent; transition: var(--transition); }
-.tab:hover { color: var(--primary-blue); }
-.tab.active { color: var(--primary-blue); border-bottom-color: var(--primary-blue); }
+.tabs {
+    display: flex;
+    gap: 1rem;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 1.5rem;
+}
 
-.chat-bubble { background: #DCF8C6; padding: 1rem; border-radius: 12px 12px 0 12px; font-size: 0.875rem; color: #111; max-width: 85%; align-self: flex-end; position: relative; box-shadow: 0 1px 1px rgba(0,0,0,0.1); }
-.chat-container { background: #E5DDD5; padding: 1.5rem; border-radius: 8px; display: flex; flex-direction: column; align-items: flex-end; min-height: 200px; }
+.tab {
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    color: var(--text-muted);
+    font-weight: 500;
+    border-bottom: 2px solid transparent;
+    transition: var(--transition);
+}
 
-.invoice-paper { background: white; padding: 3rem; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid var(--border-color); border-radius: 8px; max-width: 800px; margin: 0 auto; }
-.invoice-header { display: flex; justify-content: space-between; border-bottom: 2px solid var(--primary-blue); padding-bottom: 1.5rem; margin-bottom: 2rem; }
-.invoice-table { width: 100%; border-collapse: collapse; margin: 2rem 0; }
-.invoice-table th, .invoice-table td { padding: 0.75rem; border-bottom: 1px solid var(--border-color); text-align: left; }
-.invoice-table th { background: #F8FAFC; color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; }
+.tab:hover {
+    color: var(--primary-blue);
+}
 
-.toast-container { position: fixed; bottom: 20px; right: 20px; display: flex; flex-direction: column; gap: 10px; z-index: 9999; }
-.toast { background: #333; color: white; padding: 16px 24px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: flex; align-items: center; gap: 12px; font-weight: 500; animation: slideInUp 0.3s ease-out; }
-.toast.success { background: var(--status-green); }
-@keyframes slideInUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.tab.active {
+    color: var(--primary-blue);
+    border-bottom-color: var(--primary-blue);
+}
 
+.chat-bubble {
+    background: #DCF8C6;
+    padding: 1rem;
+    border-radius: 12px 12px 0 12px;
+    font-size: 0.875rem;
+    color: #111;
+    max-width: 85%;
+    align-self: flex-end;
+    position: relative;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+}
+
+.chat-container {
+    background: #E5DDD5;
+    padding: 1.5rem;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    min-height: 200px;
+}
+
+.invoice-paper {
+    background: white;
+    padding: 3rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.invoice-header {
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 2px solid var(--primary-blue);
+    padding-bottom: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.invoice-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 2rem 0;
+}
+
+.invoice-table th,
+.invoice-table td {
+    padding: 0.75rem;
+    border-bottom: 1px solid var(--border-color);
+    text-align: left;
+}
+
+.invoice-table th {
+    background: #F8FAFC;
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+}
+
+.toast-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 9999;
+}
+
+.toast {
+    background: #333;
+    color: white;
+    padding: 16px 24px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-weight: 500;
+    animation: slideInUp 0.3s ease-out;
+}
+
+.toast.success {
+    background: var(--status-green);
+}
+
+@keyframes slideInUp {
+    from {
+        transform: translateY(100%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
