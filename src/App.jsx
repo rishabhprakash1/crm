@@ -111,9 +111,10 @@ export default function App() {
             )}
 
             {currentView === 'tools' && <ToolsHubView setView={setCurrentView} clients={clients} addToast={addToast} />}
-            {currentView === 'generate-invoices' && <InvoiceManagerView clients={clients} setView={setCurrentView} addToast={addToast} />}
+            {currentView === 'invoices' && <InvoiceManagerView clients={clients} setView={setCurrentView} addToast={addToast} />}
+            {currentView === 'opportunities' && <OpportunitiesView clients={clients} setView={setCurrentView} addToast={addToast} />}
 
-            {['placeholder-opportunities', 'placeholder-billing'].includes(currentView) && (
+            {['placeholder-billing'].includes(currentView) && (
                 <main className="main-content flex-center" style={{ minHeight: '60vh', textAlign: 'center' }}>
                     <div><Briefcase size={64} style={{ color: 'var(--border-color)', margin: '0 auto 1.5rem' }} /><h2 className="text-h1">Coming Soon</h2><p className="text-muted">This module is under development for the next phase.</p><br /><button className="btn-secondary" onClick={() => setCurrentView('homepage')}>Back to Home</button></div>
                 </main>
@@ -124,6 +125,10 @@ export default function App() {
         </div>
     );
 }
+
+// =========================================================================
+// HOMEPAGE VIEW
+// =========================================================================
 
 function HomePageView({ userName, setView }) {
     return (
@@ -138,7 +143,7 @@ function HomePageView({ userName, setView }) {
                     <div className="home-card-title">Client Servicing</div>
                     <span className="text-sm text-muted">Manage all client details, tracking, and deep-dive analytics.</span>
                 </div>
-                <div className="home-card" onClick={() => setView('generate-invoices')}>
+                <div className="home-card" onClick={() => setView('invoices')}>
                     <div className="home-card-icon"><FileText size={32} /></div>
                     <div className="home-card-title">Invoice Management</div>
                     <span className="text-sm text-muted">Auto-generate invoices, track billing, and initiate SecurePay.</span>
@@ -148,7 +153,7 @@ function HomePageView({ userName, setView }) {
                     <div className="home-card-title">Tools & Utilities</div>
                     <span className="text-sm text-muted">Access AI Audit, GST 3B sheets, Document Checklists & Drafts.</span>
                 </div>
-                <div className="home-card" onClick={() => setView('placeholder-opportunities')}>
+                <div className="home-card" onClick={() => setView('opportunities')}>
                     <div className="home-card-icon" style={{ background: '#DEF7EC', color: '#03543F' }}><TrendingUp size={32} /></div>
                     <div className="home-card-title">New Opportunities</div>
                     <span className="text-sm text-muted">Identify upsell targets for unmanaged GST, TDS, and Tax services.</span>
@@ -162,6 +167,159 @@ function HomePageView({ userName, setView }) {
         </main>
     );
 }
+
+// =========================================================================
+// INVOICE MANAGEMENT VIEW
+// =========================================================================
+
+function InvoiceManagerView({ clients, setView, addToast }) {
+    const stats = useMemo(() => {
+        let billed = 0, paid = 0, pending = 0;
+        clients.forEach(c => { billed += c.invoice.total; paid += c.invoice.paid; pending += c.invoice.pending; });
+        return { billed, paid, pending };
+    }, [clients]);
+
+    return (
+        <main className="main-content animate-slide-down" style={{ maxWidth: '1200px', margin: '0 auto' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
+                <button className="btn-icon" onClick={() => setView('homepage')}><ArrowLeft /></button>
+                <h2 className="text-h1">Invoice Management</h2>
+            </div>
+
+            <div className="grid-2" style={{ marginBottom: '2rem' }}>
+                <div className="table-card" style={{ padding: '2.5rem', textAlign: 'center' }}>
+                    <h3 className="section-title text-muted" style={{ display: 'block' }}>Total Billed Output</h3>
+                    <div className="text-h1 text-blue" style={{ fontSize: '3rem', margin: '1rem 0' }}>₹{stats.billed.toLocaleString('en-IN')}</div>
+                </div>
+                <div className="table-card" style={{ padding: '2.5rem', textAlign: 'center' }}>
+                    <h3 className="section-title text-muted" style={{ display: 'block' }}>Total Collection / Settled</h3>
+                    <div className="text-h1 text-green" style={{ fontSize: '3rem', margin: '1rem 0' }}>₹{stats.paid.toLocaleString('en-IN')}</div>
+                    <p className="text-sm font-semibold text-red">Net Outstanding: ₹{stats.pending.toLocaleString('en-IN')}</p>
+                </div>
+            </div>
+
+            <div className="table-card">
+                <table className="spreadsheet-table" style={{ border: 'none' }}>
+                    <thead>
+                        <tr>
+                            <th>Client Name</th>
+                            <th>Total Billed Amount (₹)</th>
+                            <th>Total Paid Amount (₹)</th>
+                            <th>Outstanding Amount (₹)</th>
+                            <th>Collection Strategy</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {clients.map(c => (
+                            <tr key={c.id} style={{ background: c.invoice.pending > 0 ? '#FEF2F2' : '' }}>
+                                <td><div className="font-semibold text-blue">{c.companyName}</div><div className="text-xs text-muted">{c.email}</div></td>
+                                <td>{c.invoice.total.toLocaleString('en-IN')}</td>
+                                <td className="text-green font-semibold">{c.invoice.paid.toLocaleString('en-IN')}</td>
+                                <td className={c.invoice.pending > 0 ? 'text-red font-semibold' : 'text-muted'}>{c.invoice.pending.toLocaleString('en-IN')}</td>
+                                <td>
+                                    {c.invoice.pending > 0 ? (
+                                        <button className="btn-outline" style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem', borderColor: 'var(--status-red)', color: 'var(--status-red)' }} onClick={() => addToast('Payment reminder dispatched seamlessly!', 'success')}>Send Reminder Link</button>
+                                    ) : (
+                                        <span className="badge badge-green">Fully Settled</span>
+                                    )}
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    );
+}
+
+// =========================================================================
+// NEW OPPORTUNITIES VIEW
+// =========================================================================
+
+function OpportunitiesView({ clients, setView, addToast }) {
+    const [proposalData, setProposalData] = useState(null);
+
+    const opportunitiesList = useMemo(() => {
+        return clients.map(client => {
+            const taxType = client.type === 'Company' ? 'Corporate Tax' : 'Income Tax';
+            const possibleServices = ['GST Filing', 'TDS', taxType];
+            const missing = possibleServices.filter(s => !client.services.includes(s));
+            return { ...client, missing };
+        }).filter(c => c.missing.length > 0);
+    }, [clients]);
+
+    return (
+        <main className="main-content animate-slide-down" style={{ maxWidth: '1200px', margin: '0 auto' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
+                <button className="btn-icon" onClick={() => setView('homepage')}><ArrowLeft /></button>
+                <div>
+                    <h2 className="text-h1">New Opportunities</h2>
+                    <div className="text-muted font-semibold">Targets identified through Unmanaged Services mapping.</div>
+                </div>
+            </div>
+
+            <div className="table-card">
+                <table className="spreadsheet-table" style={{ border: 'none' }}>
+                    <thead>
+                        <tr>
+                            <th>Client Name</th>
+                            <th>Contact Node</th>
+                            <th>Unmanaged Target Services</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {opportunitiesList.map(c => (
+                            <tr key={c.id}>
+                                <td><div className="font-semibold text-blue">{c.companyName}</div><div className="text-xs text-muted">Entity: {c.type}</div></td>
+                                <td><div className="font-semibold text-sm">{c.contactPerson}</div><div className="text-xs text-muted">{c.email}</div></td>
+                                <td>
+                                    <div className="service-pill-group">
+                                        {c.missing.map(m => <div key={m} className="service-pill opportunity">{m}</div>)}
+                                    </div>
+                                </td>
+                                <td>
+                                    <button className="btn-primary" style={{ padding: '0.4rem 1rem', fontSize: '0.85rem' }} onClick={() => setProposalData(c)}>Send Proposal <Send size={14} style={{ display: 'inline', marginLeft: '4px' }} /></button>
+                                </td>
+                            </tr>
+                        ))}
+                        {opportunitiesList.length === 0 && (
+                            <tr><td colSpan="4" style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '3rem' }}>All tracked clients are fully managed mapped securely across all compliance verticals!</td></tr>
+                        )}
+                    </tbody>
+                </table>
+            </div>
+
+            {/* SEND PROPOSAL POPUP */}
+            {proposalData && (
+                <div className="modal-overlay" onClick={() => setProposalData(null)}>
+                    <div className="modal-content animate-slide-down" style={{ maxWidth: '600px' }} onClick={e => e.stopPropagation()}>
+                        <div className="modal-header" style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '1rem', marginBottom: '1rem' }}>
+                            <div><h2 className="text-h1" style={{ fontSize: '1.25rem' }}>Custom Proposal Pitch</h2><div className="text-xs text-muted">Targeting {proposalData.companyName} for {proposalData.missing.join(' & ')}</div></div>
+                            <button className="btn-icon" onClick={() => setProposalData(null)}><X size={20} /></button>
+                        </div>
+                        <div className="modal-body" style={{ marginBottom: '1rem' }}>
+                            <div className="input-group" style={{ marginBottom: '1rem' }}><label>To</label><input type="text" value={proposalData.email} disabled /></div>
+                            <div className="input-group" style={{ marginBottom: '1rem' }}><label>Subject</label><input type="text" defaultValue={`Compliance Optimization: Managing your ${proposalData.missing.join(' and ')} requirements`} /></div>
+                            <div className="input-group">
+                                <label>Email Body (Auto-generated)</label>
+                                <textarea rows="10" defaultValue={`Hi ${proposalData.contactPerson},\n\nWe noted that while we manage elements of your portfolio gracefully, your organization explicitly manages ${proposalData.missing.join(' and ')} internally.\n\nJC Kabra & Associates specializes exactly in rendering these workflows heavily redundant regarding time and compliance exposure. Relocating these specific pipelines to our AI-audited ecosystem guarantees optimal liability reduction.\n\nCould we arrange a quick 10-minute hookup to discuss syncing this officially?\n\nBest Regards,\nMoksh (JC Kabra & Associates)`} style={{ fontFamily: 'monospace', fontSize: '0.85rem' }}></textarea>
+                            </div>
+                        </div>
+                        <div className="modal-footer" style={{ borderTop: '1px solid var(--border-color)', paddingTop: '1rem', display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
+                            <button className="btn-outline" onClick={() => setProposalData(null)}>Cancel</button>
+                            <button className="btn-primary" onClick={() => { addToast(`Proposal transmitted to ${proposalData.companyName} explicitly successfully.`); setProposalData(null); }}><Send size={16} style={{ display: 'inline', marginRight: '6px' }} /> Broadcast Proposal</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </main>
+    );
+}
+
+// =========================================================================
+// REST OF THE APPLICATION VIEWS (Client Servicing, Detail, Tools, Filing)
+// =========================================================================
 
 function ClientListView({ clients, setView, selectClient }) {
     const [search, setSearch] = useState('');
@@ -189,7 +347,7 @@ function ClientListView({ clients, setView, selectClient }) {
 
             <div className="table-card">
                 <table>
-                    <thead><tr><th>Client Name</th><th>Email</th><th>Phone Number</th><th>Service Opportunities Tracker</th></tr></thead>
+                    <thead><tr><th>Client Name</th><th>Email</th><th>Phone Number</th><th>Service Tracking Status</th></tr></thead>
                     <tbody>
                         {filtered.map(client => {
                             const hasGST = client.services.includes('GST Filing');
@@ -225,23 +383,17 @@ function ClientListView({ clients, setView, selectClient }) {
 }
 
 function ClientDetailView({ client, setView, addToast, onStartFiling }) {
-    const [tab, setTab] = useState('Taxation'); // Taxation, TDS, GST, Invoice
+    const [tab, setTab] = useState('Taxation');
     const [year, setYear] = useState('FY 2025-26');
     const [showIntegration, setShowIntegration] = useState(false);
 
-    // Derive tax types
     const taxType = client.type === 'Company' ? 'Corporate Tax' : 'Income Tax';
 
     const mockMonthData = useMemo(() => {
         return MONTHS.map((m, i) => {
             const isPast = i < 10;
             const amount = Math.floor(Math.random() * 50000) + 10000;
-            return {
-                month: m,
-                pending: isPast ? 0 : amount,
-                paid: isPast ? amount : 0,
-                notice: (isPast && Math.random() > 0.85) ? 'Notice Pending' : 'None'
-            };
+            return { month: m, pending: isPast ? 0 : amount, paid: isPast ? amount : 0, notice: (isPast && Math.random() > 0.85) ? 'Notice Pending' : 'None' };
         });
     }, [year]);
 
@@ -267,7 +419,6 @@ function ClientDetailView({ client, setView, addToast, onStartFiling }) {
                 </div>
             </div>
 
-            {/* TABS & FILTERS */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', borderBottom: '2px solid var(--border-color)', marginBottom: '2rem' }}>
                 <div className="tabs" style={{ borderBottom: 'none', marginBottom: '-2px', gap: '1.5rem' }}>
                     {['Taxation', 'TDS', 'GST', 'Invoice'].map(t => (
@@ -277,7 +428,6 @@ function ClientDetailView({ client, setView, addToast, onStartFiling }) {
                     ))}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', paddingBottom: '0.5rem' }}>
-                    {/* Dynamic Action Buttons per Tab */}
                     {tab === 'Taxation' && <button className="btn-primary" onClick={() => onStartFiling('Taxation')}>Calculate Tax</button>}
                     {tab === 'GST' && <button className="btn-primary" onClick={() => onStartFiling('GST')}>Start GST Filing</button>}
                     {tab === 'TDS' && <button className="btn-primary" onClick={() => onStartFiling('TDS')}>Start TDS Filing</button>}
@@ -291,7 +441,6 @@ function ClientDetailView({ client, setView, addToast, onStartFiling }) {
                 </div>
             </div>
 
-            {/* TAB CONTENT */}
             {tab === 'Taxation' && (
                 <div className="animate-slide-down">
                     <div className="grid-2" style={{ marginBottom: '2rem' }}>
@@ -325,13 +474,7 @@ function ClientDetailView({ client, setView, addToast, onStartFiling }) {
                 <div className="table-card animate-slide-down">
                     <table className="spreadsheet-table" style={{ border: 'none' }}>
                         <thead>
-                            <tr>
-                                <th>Month</th>
-                                <th>{tab === 'Invoice' ? 'Amount Billed / Sent (₹)' : `${tab} Expected / Required (₹)`}</th>
-                                <th>{tab} Paid / Settled (₹)</th>
-                                <th>{tab} Pending (₹)</th>
-                                <th>Notices / Reminders</th>
-                            </tr>
+                            <tr><th>Month</th><th>{tab === 'Invoice' ? 'Amount Billed (₹)' : `${tab} Expected (₹)`}</th><th>{tab} Settled (₹)</th><th>{tab} Pending (₹)</th><th>Notices</th></tr>
                         </thead>
                         <tbody>
                             {mockMonthData.map((data, idx) => (
@@ -357,7 +500,6 @@ function ClientDetailView({ client, setView, addToast, onStartFiling }) {
                 </div>
             )}
 
-            {/* INTEGRATIONS POPUP */}
             {showIntegration && (
                 <div className="modal-overlay" onClick={() => setShowIntegration(false)}>
                     <div className="modal-content animate-slide-down" style={{ maxWidth: '500px' }} onClick={e => e.stopPropagation()}>
@@ -366,7 +508,7 @@ function ClientDetailView({ client, setView, addToast, onStartFiling }) {
                             <button className="btn-icon" onClick={() => setShowIntegration(false)}><X size={20} /></button>
                         </div>
                         <div className="modal-body">
-                            <p className="text-sm text-muted" style={{ marginBottom: '1.5rem' }}>Sync external software safely mapping data directly to {client.companyName}'s profile.</p>
+                            <p className="text-sm text-muted" style={{ marginBottom: '1.5rem' }}>Sync external software mapping data directly to {client.companyName}.</p>
                             <div className="input-group" style={{ marginBottom: '1.5rem' }}>
                                 <label>Select Associated Tool</label>
                                 <select><option>Zoho Books / ERP</option><option>Tally Prime API</option><option>Salesforce CRM</option><option>Odoo ERP</option></select>
@@ -374,7 +516,6 @@ function ClientDetailView({ client, setView, addToast, onStartFiling }) {
                             <div className="input-group">
                                 <label>API Key / Client Secret</label>
                                 <input type="password" placeholder="your_api_key_xxxxxxxxxxxxxxxxxxxxxx" />
-                                <div className="text-xs text-muted" style={{ marginTop: '0.2rem' }}>Keys are fully encrypted inside Kolabix.</div>
                             </div>
                         </div>
                         <div className="modal-footer">
@@ -388,12 +529,8 @@ function ClientDetailView({ client, setView, addToast, onStartFiling }) {
     );
 }
 
-// =========================================================================
-// FILING FLOW COMPONENT (GST / TDS / Tax)
-// =========================================================================
-
 function FilingFlowView({ client, type, setView, addToast }) {
-    const [calcState, setCalcState] = useState(0); // 0=init, 1=loading, 2=done
+    const [calcState, setCalcState] = useState(0);
     const [validState, setValidState] = useState(0);
     const [linkSent, setLinkSent] = useState(false);
 
@@ -404,13 +541,9 @@ function FilingFlowView({ client, type, setView, addToast }) {
         <main className="main-content animate-slide-down" style={{ maxWidth: '900px', margin: '0 auto' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '1.5rem', marginBottom: '2rem' }}>
                 <button className="btn-icon" onClick={() => setView('client-detail')}><ArrowLeft /></button>
-                <div>
-                    <h2 className="text-h1">{client.companyName}</h2>
-                    <div className="text-muted font-semibold">{titlePrefix}</div>
-                </div>
+                <div><h2 className="text-h1">{client.companyName}</h2><div className="text-muted font-semibold">{titlePrefix}</div></div>
             </div>
 
-            {/* Section 1: Connect client tool */}
             <div className="table-card" style={{ padding: '2rem', marginBottom: '1.5rem' }}>
                 <h3 className="section-title">1. Connected Client Tools</h3>
                 {connectedTools.length > 0 ? (
@@ -420,14 +553,10 @@ function FilingFlowView({ client, type, setView, addToast }) {
                         <button className="btn-outline" style={{ padding: '0.3rem 0.8rem', color: 'var(--status-red)', borderColor: 'var(--status-red)' }}>Remove Tool</button>
                     </div>
                 ) : (
-                    <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                        <span className="text-muted">No external tools connected for automated pulling.</span>
-                        <button className="btn-outline" style={{ padding: '0.3rem 0.8rem' }}>+ Connect Client Tool</button>
-                    </div>
+                    <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}><span className="text-muted">No external tools connected for automated pulling.</span><button className="btn-outline" style={{ padding: '0.3rem 0.8rem' }}>+ Connect Client Tool</button></div>
                 )}
             </div>
 
-            {/* Section 2: Upload client data */}
             <div className="table-card" style={{ padding: '2rem', marginBottom: '1.5rem' }}>
                 <h3 className="section-title">2. Upload Client Data (Manual Override)</h3>
                 <div style={{ border: '2px dashed var(--border-color)', borderRadius: '8px', padding: '2rem', textAlign: 'center', background: '#F8FAFC' }}>
@@ -437,19 +566,11 @@ function FilingFlowView({ client, type, setView, addToast }) {
                 </div>
             </div>
 
-            {/* Section 3: Calculate Button */}
             {calcState === 0 && (
-                <button className="btn-primary" style={{ width: '100%', padding: '1.5rem', fontSize: '1.25rem', marginBottom: '2rem', letterSpacing: '1px' }} onClick={() => { setCalcState(1); setTimeout(() => setCalcState(2), 2000); }}>
-                    <Calculator size={20} style={{ display: 'inline', marginRight: '8px', position: 'relative', top: '2px' }} /> CALCULATE {type.toUpperCase()}
-                </button>
+                <button className="btn-primary" style={{ width: '100%', padding: '1.5rem', fontSize: '1.25rem', marginBottom: '2rem', letterSpacing: '1px' }} onClick={() => { setCalcState(1); setTimeout(() => setCalcState(2), 2000); }}><Calculator size={20} style={{ display: 'inline', marginRight: '8px', position: 'relative', top: '2px' }} /> CALCULATE {type.toUpperCase()}</button>
             )}
 
-            {calcState === 1 && (
-                <div className="table-card flex-center" style={{ padding: '3rem', flexDirection: 'column', gap: '1rem', marginBottom: '1.5rem' }}>
-                    <div className="spinner"></div>
-                    <div className="font-semibold text-blue">Running AI parsing and logic engines...</div>
-                </div>
-            )}
+            {calcState === 1 && (<div className="table-card flex-center" style={{ padding: '3rem', flexDirection: 'column', gap: '1rem', marginBottom: '1.5rem' }}><div className="spinner"></div><div className="font-semibold text-blue">Running AI parsing and logic engines...</div></div>)}
 
             {calcState === 2 && (
                 <div className="animate-slide-down">
@@ -457,36 +578,20 @@ function FilingFlowView({ client, type, setView, addToast }) {
                         <div className="table-card" style={{ padding: '2rem', marginBottom: '1.5rem', textAlign: 'center' }}>
                             <h3 className="section-title" style={{ color: 'var(--status-green)' }}>Initial Calculation Complete.</h3>
                             <p className="text-muted" style={{ marginBottom: '1.5rem' }}>Calculated projected values from internal ledgers. Ready to cross-verify with external portals.</p>
-                            <button className="btn-outline" style={{ padding: '1rem 2rem', fontSize: '1.1rem' }} onClick={() => { setValidState(1); setTimeout(() => setValidState(2), 2500); }}>
-                                <ScanLine style={{ display: 'inline', marginRight: '8px' }} /> Validate via External Sources
-                            </button>
+                            <button className="btn-outline" style={{ padding: '1rem 2rem', fontSize: '1.1rem' }} onClick={() => { setValidState(1); setTimeout(() => setValidState(2), 2500); }}><ScanLine style={{ display: 'inline', marginRight: '8px' }} /> Validate via External Sources</button>
                         </div>
                     )}
 
-                    {validState === 1 && (
-                        <div className="table-card flex-center" style={{ padding: '3rem', flexDirection: 'column', gap: '1rem', marginBottom: '1.5rem' }}>
-                            <div className="spinner" style={{ borderColor: 'rgba(252, 165, 165, 0.4)', borderLeftColor: 'var(--status-red)' }}></div>
-                            <div className="font-semibold text-red">Fetching compliance portal networks...</div>
-                        </div>
-                    )}
+                    {validState === 1 && (<div className="table-card flex-center" style={{ padding: '3rem', flexDirection: 'column', gap: '1rem', marginBottom: '1.5rem' }}><div className="spinner" style={{ borderColor: 'rgba(252, 165, 165, 0.4)', borderLeftColor: 'var(--status-red)' }}></div><div className="font-semibold text-red">Fetching compliance portal networks...</div></div>)}
 
                     {validState === 2 && (
                         <div className="animate-slide-down">
                             <div className="table-card" style={{ padding: '2rem', marginBottom: '1.5rem' }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                                    <h3 className="section-title" style={{ margin: 0 }}>Validation Results</h3>
-                                    <span className="badge badge-red">Mismatches Found</span>
-                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}><h3 className="section-title" style={{ margin: 0 }}>Validation Results</h3><span className="badge badge-red">Mismatches Found</span></div>
                                 <table className="spreadsheet-table" style={{ marginBottom: '1rem' }}>
                                     <thead><tr><th>Source</th><th>Internal System (₹)</th><th>External Portal (₹)</th><th>Variance/Mismatch</th></tr></thead>
                                     <tbody>
-                                        {type === 'GST' ? (
-                                            <tr className="mismatch-row"><td>GSTR-2A vs 3B (ITC)</td><td>₹45,000</td><td>₹42,500</td><td><b className="text-red">-₹2,500</b></td></tr>
-                                        ) : type === 'TDS' ? (
-                                            <tr className="mismatch-row"><td>Form 26AS Match</td><td>₹12,400</td><td>₹10,000</td><td><b className="text-red">-₹2,400</b></td></tr>
-                                        ) : (
-                                            <tr className="mismatch-row"><td>AIS Information Base</td><td>₹5,00,000</td><td>₹6,50,000</td><td><b className="text-red">-₹1,50,000</b></td></tr>
-                                        )}
+                                        {type === 'GST' ? <tr className="mismatch-row"><td>GSTR-2A vs 3B (ITC)</td><td>₹45,000</td><td>₹42,500</td><td><b className="text-red">-₹2,500</b></td></tr> : type === 'TDS' ? <tr className="mismatch-row"><td>Form 26AS Match</td><td>₹12,400</td><td>₹10,000</td><td><b className="text-red">-₹2,400</b></td></tr> : <tr className="mismatch-row"><td>AIS Information Base</td><td>₹5,00,000</td><td>₹6,50,000</td><td><b className="text-red">-₹1,50,000</b></td></tr>}
                                     </tbody>
                                 </table>
                             </div>
@@ -500,20 +605,13 @@ function FilingFlowView({ client, type, setView, addToast }) {
                                 </div>
                             </div>
 
-                            {/* Action Buttons */}
                             <div style={{ display: 'flex', gap: '1rem' }}>
-                                <button className="btn-primary" style={{ flex: 1, padding: '1.25rem', fontSize: '1.1rem' }} onClick={() => addToast('Successfully filed natively via Kolabix secure endpoint!', 'success')}>
-                                    Fill on behalf of client
-                                </button>
+                                <button className="btn-primary" style={{ flex: 1, padding: '1.25rem', fontSize: '1.1rem' }} onClick={() => addToast('Successfully filed natively via Kolabix secure endpoint!', 'success')}>Fill on behalf of client</button>
                                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                                    <button className="btn-outline" style={{ padding: '1.25rem', fontSize: '1.1rem', background: 'white' }} onClick={() => { setLinkSent(true); addToast('Client instructions broadcasted completely.'); }}>
-                                        Send link to client for payment & instructions
-                                    </button>
+                                    <button className="btn-outline" style={{ padding: '1.25rem', fontSize: '1.1rem', background: 'white' }} onClick={() => { setLinkSent(true); addToast('Client instructions broadcasted completely.'); }}>Send link to client for payment & instructions</button>
                                     {linkSent && (
                                         <div style={{ display: 'flex', justifyContent: 'center', gap: '1.5rem', marginTop: '1rem', background: '#DEF7EC', padding: '0.75rem', borderRadius: '8px', border: '1px solid #84E1BC' }}>
-                                            <span style={{ color: '#03543F', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '4px' }}><Check size={16} /> WhatsApp</span>
-                                            <span style={{ color: '#03543F', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '4px' }}><Check size={16} /> SMS</span>
-                                            <span style={{ color: '#03543F', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '4px' }}><Check size={16} /> Email</span>
+                                            <span style={{ color: '#03543F', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '4px' }}><Check size={16} /> WhatsApp</span><span style={{ color: '#03543F', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '4px' }}><Check size={16} /> SMS</span><span style={{ color: '#03543F', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '4px' }}><Check size={16} /> Email</span>
                                         </div>
                                     )}
                                 </div>
@@ -527,11 +625,6 @@ function FilingFlowView({ client, type, setView, addToast }) {
         </main>
     );
 }
-
-
-// =========================================================================
-// PRESERVED VIEWS FOR TOOLS & INVOICES
-// =========================================================================
 
 function ToolsHubView({ setView, clients, addToast }) {
     const [activeTool, setActiveTool] = useState(null);
@@ -551,15 +644,6 @@ function ToolsHubView({ setView, clients, addToast }) {
                     <div className="tool-card"><div className="tool-icon"><FileSignature size={24} /></div><h3 className="section-title">IT Response Drafter</h3><button className="btn-outline" onClick={() => setActiveTool('IT Response Drafter')}>Open</button></div>
                 </div>
             )}
-        </main>
-    );
-}
-
-function InvoiceManagerView({ clients, setView, addToast }) {
-    return (
-        <main className="main-content animate-slide-down">
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}><button className="btn-icon" onClick={() => setView('homepage')}><ArrowLeft /></button><h2 className="text-h1">Invoice Management</h2></div>
-            <div className="table-card" style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}><FileText size={48} style={{ margin: '0 auto 1rem', opacity: 0.3 }} /><p>Auto-generate multi-client bills and process SecurePay links here.</p></div>
         </main>
     );
 }
