@@ -4,7 +4,7 @@ import {
     LogOut, Briefcase, Mail, MessageSquare, Smartphone,
     ArrowLeft, FileText, Download, Link, CreditCard, ChevronRight,
     Calculator, FileSignature, CheckSquare, ScanLine, UploadCloud, FileTerminal,
-    Grid, ClipboardCheck, AlertTriangle, Users, TrendingUp, Key, Filter
+    Grid, ClipboardCheck, AlertTriangle, Users, TrendingUp, Key, Filter, Link as LinkIcon
 } from 'lucide-react';
 import { clientsData as initialClients } from './data';
 import './tools.css';
@@ -32,14 +32,16 @@ const YEARS = ['FY 2025-26', 'FY 2024-25', 'FY 2023-24'];
 export default function App() {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [user, setUser] = useState(null);
-    const [currentView, setCurrentView] = useState('homepage'); // homepage, client-list, client-detail, tools, generate-invoices, etc
+    const [currentView, setCurrentView] = useState('homepage');
 
     const [clients, setClients] = useState(initialClients);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
 
-    // Modals & Navigation
+    // Navigation
     const [selectedClient, setSelectedClient] = useState(null);
+    const [filingType, setFilingType] = useState('');
+
     const [showNotifications, setShowNotifications] = useState(false);
     const [toasts, setToasts] = useState([]);
 
@@ -89,7 +91,25 @@ export default function App() {
             {/* VIEWS */}
             {currentView === 'homepage' && <HomePageView userName={user.name} setView={setCurrentView} />}
             {currentView === 'client-list' && <ClientListView clients={clients} setView={setCurrentView} selectClient={(c) => { setSelectedClient(c); setCurrentView('client-detail'); }} />}
-            {currentView === 'client-detail' && <ClientDetailView client={selectedClient} setView={setCurrentView} addToast={addToast} />}
+
+            {currentView === 'client-detail' && (
+                <ClientDetailView
+                    client={selectedClient}
+                    setView={setCurrentView}
+                    addToast={addToast}
+                    onStartFiling={(type) => { setFilingType(type); setCurrentView('filing-flow'); }}
+                />
+            )}
+
+            {currentView === 'filing-flow' && (
+                <FilingFlowView
+                    client={selectedClient}
+                    type={filingType}
+                    setView={setCurrentView}
+                    addToast={addToast}
+                />
+            )}
+
             {currentView === 'tools' && <ToolsHubView setView={setCurrentView} clients={clients} addToast={addToast} />}
             {currentView === 'generate-invoices' && <InvoiceManagerView clients={clients} setView={setCurrentView} addToast={addToast} />}
 
@@ -204,7 +224,7 @@ function ClientListView({ clients, setView, selectClient }) {
     );
 }
 
-function ClientDetailView({ client, setView, addToast }) {
+function ClientDetailView({ client, setView, addToast, onStartFiling }) {
     const [tab, setTab] = useState('Taxation'); // Taxation, TDS, GST, Invoice
     const [year, setYear] = useState('FY 2025-26');
     const [showIntegration, setShowIntegration] = useState(false);
@@ -214,7 +234,6 @@ function ClientDetailView({ client, setView, addToast }) {
 
     const mockMonthData = useMemo(() => {
         return MONTHS.map((m, i) => {
-            // Semi-random mock data logic
             const isPast = i < 10;
             const amount = Math.floor(Math.random() * 50000) + 10000;
             return {
@@ -257,11 +276,18 @@ function ClientDetailView({ client, setView, addToast }) {
                         </div>
                     ))}
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', paddingBottom: '0.5rem' }}>
-                    <Filter size={18} className="text-muted" />
-                    <select value={year} onChange={e => setYear(e.target.value)} style={{ padding: '0.4rem 2rem 0.4rem 1rem', borderRadius: '999px', border: '1px solid var(--border-color)', background: 'white' }}>
-                        {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
-                    </select>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', paddingBottom: '0.5rem' }}>
+                    {/* Dynamic Action Buttons per Tab */}
+                    {tab === 'Taxation' && <button className="btn-primary" onClick={() => onStartFiling('Taxation')}>Calculate Tax</button>}
+                    {tab === 'GST' && <button className="btn-primary" onClick={() => onStartFiling('GST')}>Start GST Filing</button>}
+                    {tab === 'TDS' && <button className="btn-primary" onClick={() => onStartFiling('TDS')}>Start TDS Filing</button>}
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginLeft: '1rem' }}>
+                        <Filter size={18} className="text-muted" />
+                        <select value={year} onChange={e => setYear(e.target.value)} style={{ padding: '0.4rem 2rem 0.4rem 1rem', borderRadius: '999px', border: '1px solid var(--border-color)', background: 'white' }}>
+                            {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
+                        </select>
+                    </div>
                 </div>
             </div>
 
@@ -363,7 +389,148 @@ function ClientDetailView({ client, setView, addToast }) {
 }
 
 // =========================================================================
-// PRESERVED VIEWS FOR TOOLS & INVOICES (Extracted structurally to save space)
+// FILING FLOW COMPONENT (GST / TDS / Tax)
+// =========================================================================
+
+function FilingFlowView({ client, type, setView, addToast }) {
+    const [calcState, setCalcState] = useState(0); // 0=init, 1=loading, 2=done
+    const [validState, setValidState] = useState(0);
+    const [linkSent, setLinkSent] = useState(false);
+
+    const titlePrefix = type === 'Taxation' ? 'Calculate Tax' : `Start ${type} Filing`;
+    const connectedTools = Object.keys(client.integrations).filter(k => client.integrations[k]);
+
+    return (
+        <main className="main-content animate-slide-down" style={{ maxWidth: '900px', margin: '0 auto' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '1.5rem', marginBottom: '2rem' }}>
+                <button className="btn-icon" onClick={() => setView('client-detail')}><ArrowLeft /></button>
+                <div>
+                    <h2 className="text-h1">{client.companyName}</h2>
+                    <div className="text-muted font-semibold">{titlePrefix}</div>
+                </div>
+            </div>
+
+            {/* Section 1: Connect client tool */}
+            <div className="table-card" style={{ padding: '2rem', marginBottom: '1.5rem' }}>
+                <h3 className="section-title">1. Connected Client Tools</h3>
+                {connectedTools.length > 0 ? (
+                    <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                        {connectedTools.map(t => <span key={t} className="badge badge-blue" style={{ fontSize: '0.9rem', padding: '0.4rem 0.8rem', textTransform: 'capitalize' }}><LinkIcon size={14} style={{ display: 'inline', marginRight: '4px' }} /> {t} connected</span>)}
+                        <button className="btn-outline" style={{ padding: '0.3rem 0.8rem' }}>+ Add Additional Tool</button>
+                        <button className="btn-outline" style={{ padding: '0.3rem 0.8rem', color: 'var(--status-red)', borderColor: 'var(--status-red)' }}>Remove Tool</button>
+                    </div>
+                ) : (
+                    <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                        <span className="text-muted">No external tools connected for automated pulling.</span>
+                        <button className="btn-outline" style={{ padding: '0.3rem 0.8rem' }}>+ Connect Client Tool</button>
+                    </div>
+                )}
+            </div>
+
+            {/* Section 2: Upload client data */}
+            <div className="table-card" style={{ padding: '2rem', marginBottom: '1.5rem' }}>
+                <h3 className="section-title">2. Upload Client Data (Manual Override)</h3>
+                <div style={{ border: '2px dashed var(--border-color)', borderRadius: '8px', padding: '2rem', textAlign: 'center', background: '#F8FAFC' }}>
+                    <UploadCloud size={32} style={{ margin: '0 auto 0.5rem', opacity: 0.5 }} />
+                    <div className="font-semibold text-muted">Drag and drop raw data sheets (Tally exports, ledgers, JSON)</div>
+                    <button className="btn-secondary" style={{ marginTop: '1rem' }}>Select File</button>
+                </div>
+            </div>
+
+            {/* Section 3: Calculate Button */}
+            {calcState === 0 && (
+                <button className="btn-primary" style={{ width: '100%', padding: '1.5rem', fontSize: '1.25rem', marginBottom: '2rem', letterSpacing: '1px' }} onClick={() => { setCalcState(1); setTimeout(() => setCalcState(2), 2000); }}>
+                    <Calculator size={20} style={{ display: 'inline', marginRight: '8px', position: 'relative', top: '2px' }} /> CALCULATE {type.toUpperCase()}
+                </button>
+            )}
+
+            {calcState === 1 && (
+                <div className="table-card flex-center" style={{ padding: '3rem', flexDirection: 'column', gap: '1rem', marginBottom: '1.5rem' }}>
+                    <div className="spinner"></div>
+                    <div className="font-semibold text-blue">Running AI parsing and logic engines...</div>
+                </div>
+            )}
+
+            {calcState === 2 && (
+                <div className="animate-slide-down">
+                    {validState === 0 && (
+                        <div className="table-card" style={{ padding: '2rem', marginBottom: '1.5rem', textAlign: 'center' }}>
+                            <h3 className="section-title" style={{ color: 'var(--status-green)' }}>Initial Calculation Complete.</h3>
+                            <p className="text-muted" style={{ marginBottom: '1.5rem' }}>Calculated projected values from internal ledgers. Ready to cross-verify with external portals.</p>
+                            <button className="btn-outline" style={{ padding: '1rem 2rem', fontSize: '1.1rem' }} onClick={() => { setValidState(1); setTimeout(() => setValidState(2), 2500); }}>
+                                <ScanLine style={{ display: 'inline', marginRight: '8px' }} /> Validate via External Sources
+                            </button>
+                        </div>
+                    )}
+
+                    {validState === 1 && (
+                        <div className="table-card flex-center" style={{ padding: '3rem', flexDirection: 'column', gap: '1rem', marginBottom: '1.5rem' }}>
+                            <div className="spinner" style={{ borderColor: 'rgba(252, 165, 165, 0.4)', borderLeftColor: 'var(--status-red)' }}></div>
+                            <div className="font-semibold text-red">Fetching compliance portal networks...</div>
+                        </div>
+                    )}
+
+                    {validState === 2 && (
+                        <div className="animate-slide-down">
+                            <div className="table-card" style={{ padding: '2rem', marginBottom: '1.5rem' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                                    <h3 className="section-title" style={{ margin: 0 }}>Validation Results</h3>
+                                    <span className="badge badge-red">Mismatches Found</span>
+                                </div>
+                                <table className="spreadsheet-table" style={{ marginBottom: '1rem' }}>
+                                    <thead><tr><th>Source</th><th>Internal System (₹)</th><th>External Portal (₹)</th><th>Variance/Mismatch</th></tr></thead>
+                                    <tbody>
+                                        {type === 'GST' ? (
+                                            <tr className="mismatch-row"><td>GSTR-2A vs 3B (ITC)</td><td>₹45,000</td><td>₹42,500</td><td><b className="text-red">-₹2,500</b></td></tr>
+                                        ) : type === 'TDS' ? (
+                                            <tr className="mismatch-row"><td>Form 26AS Match</td><td>₹12,400</td><td>₹10,000</td><td><b className="text-red">-₹2,400</b></td></tr>
+                                        ) : (
+                                            <tr className="mismatch-row"><td>AIS Information Base</td><td>₹5,00,000</td><td>₹6,50,000</td><td><b className="text-red">-₹1,50,000</b></td></tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div className="table-card" style={{ background: '#F0F6FF', padding: '2rem', border: '1px solid #CBE0FF', marginBottom: '2rem' }}>
+                                <h3 className="section-title text-blue" style={{ fontSize: '1.25rem' }}>Final {type} Calculation Summary</h3>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginTop: '1rem' }}>
+                                    <div><div className="text-muted">Gross Outward / Liability</div><div className="text-h1">₹1,25,000</div></div>
+                                    <div><div className="text-muted">Total Credits / TDS Setup</div><div className="text-h1">₹42,500</div></div>
+                                    <div style={{ gridColumn: 'span 2', borderTop: '1px solid var(--border-color)', paddingTop: '1rem' }}><div className="text-muted">Consolidated Net Payable</div><div className="text-h1 text-blue" style={{ fontSize: '2.5rem' }}>₹82,500</div></div>
+                                </div>
+                            </div>
+
+                            {/* Action Buttons */}
+                            <div style={{ display: 'flex', gap: '1rem' }}>
+                                <button className="btn-primary" style={{ flex: 1, padding: '1.25rem', fontSize: '1.1rem' }} onClick={() => addToast('Successfully filed natively via Kolabix secure endpoint!', 'success')}>
+                                    Fill on behalf of client
+                                </button>
+                                <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                                    <button className="btn-outline" style={{ padding: '1.25rem', fontSize: '1.1rem', background: 'white' }} onClick={() => { setLinkSent(true); addToast('Client instructions broadcasted completely.'); }}>
+                                        Send link to client for payment & instructions
+                                    </button>
+                                    {linkSent && (
+                                        <div style={{ display: 'flex', justifyContent: 'center', gap: '1.5rem', marginTop: '1rem', background: '#DEF7EC', padding: '0.75rem', borderRadius: '8px', border: '1px solid #84E1BC' }}>
+                                            <span style={{ color: '#03543F', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '4px' }}><Check size={16} /> WhatsApp</span>
+                                            <span style={{ color: '#03543F', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '4px' }}><Check size={16} /> SMS</span>
+                                            <span style={{ color: '#03543F', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '4px' }}><Check size={16} /> Email</span>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                        </div>
+                    )}
+                </div>
+            )}
+
+        </main>
+    );
+}
+
+
+// =========================================================================
+// PRESERVED VIEWS FOR TOOLS & INVOICES
 // =========================================================================
 
 function ToolsHubView({ setView, clients, addToast }) {
@@ -374,11 +541,7 @@ function ToolsHubView({ setView, clients, addToast }) {
             {activeTool ? (
                 <div>
                     <div className="tool-view-header"><button className="btn-icon" onClick={() => setActiveTool(null)}><ArrowLeft /></button><h2 className="text-h1">{activeTool}</h2></div>
-                    {/* Tool views mocked simply to preserve functionality constraints */}
-                    <div className="table-card" style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}>
-                        <Calculator size={48} style={{ margin: '0 auto 1rem', opacity: 0.3 }} />
-                        <p>Access the {activeTool} here.</p>
-                    </div>
+                    <div className="table-card" style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}><Calculator size={48} style={{ margin: '0 auto 1rem', opacity: 0.3 }} /><p>Access the {activeTool} here.</p></div>
                 </div>
             ) : (
                 <div className="tool-grid">
@@ -396,10 +559,7 @@ function InvoiceManagerView({ clients, setView, addToast }) {
     return (
         <main className="main-content animate-slide-down">
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}><button className="btn-icon" onClick={() => setView('homepage')}><ArrowLeft /></button><h2 className="text-h1">Invoice Management</h2></div>
-            <div className="table-card" style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}>
-                <FileText size={48} style={{ margin: '0 auto 1rem', opacity: 0.3 }} />
-                <p>Auto-generate multi-client bills and process SecurePay links here.</p>
-            </div>
+            <div className="table-card" style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}><FileText size={48} style={{ margin: '0 auto 1rem', opacity: 0.3 }} /><p>Auto-generate multi-client bills and process SecurePay links here.</p></div>
         </main>
     );
 }
