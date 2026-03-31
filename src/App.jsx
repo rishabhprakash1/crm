@@ -114,11 +114,7 @@ export default function App() {
             {currentView === 'invoices' && <InvoiceManagerView clients={clients} setView={setCurrentView} addToast={addToast} />}
             {currentView === 'opportunities' && <OpportunitiesView clients={clients} setView={setCurrentView} addToast={addToast} />}
 
-            {['placeholder-billing'].includes(currentView) && (
-                <main className="main-content flex-center" style={{ minHeight: '60vh', textAlign: 'center' }}>
-                    <div><Briefcase size={64} style={{ color: 'var(--border-color)', margin: '0 auto 1.5rem' }} /><h2 className="text-h1">Coming Soon</h2><p className="text-muted">This module is under development for the next phase.</p><br /><button className="btn-secondary" onClick={() => setCurrentView('homepage')}>Back to Home</button></div>
-                </main>
-            )}
+            {currentView === 'billing' && <BillingAccountView setView={setCurrentView} addToast={addToast} />}
 
             {/* Global Toasts */}
             <div className="toast-container">{toasts.map(t => <div key={t.id} className={`toast ${t.type}`}><Check size={18} /> {t.msg}</div>)}</div>
@@ -158,7 +154,7 @@ function HomePageView({ userName, setView }) {
                     <div className="home-card-title">New Opportunities</div>
                     <span className="text-sm text-muted">Identify upsell targets for unmanaged GST, TDS, and Tax services.</span>
                 </div>
-                <div className="home-card" onClick={() => setView('placeholder-billing')}>
+                <div className="home-card" onClick={() => setView('billing')}>
                     <div className="home-card-icon" style={{ background: '#FDF6B2', color: '#723B13' }}><CreditCard size={32} /></div>
                     <div className="home-card-title">Billing & Account</div>
                     <span className="text-sm text-muted">Manage firm resources, subscriptions, and administrative settings.</span>
@@ -666,3 +662,104 @@ function LoginView({ onLogin, email, setEmail, password, setPassword }) {
         </div>
     );
 }
+
+// =========================================================================
+// BILLING & ACCOUNT VIEW
+// =========================================================================
+
+function BillingAccountView({ setView, addToast }) {
+    const [rechargeModal, setRechargeModal] = useState(null);
+
+    const handleRecharge = (amount) => {
+        addToast(`Successfully recharged ${rechargeModal.title} with ₹${amount}`, 'success');
+        setRechargeModal(null);
+    };
+
+    return (
+        <main className="main-content animate-slide-down" style={{ maxWidth: '1200px', margin: '0 auto' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
+                <button className="btn-icon" onClick={() => setView('homepage')}><ArrowLeft /></button>
+                <h2 className="text-h1">Billing & Account</h2>
+            </div>
+
+            <div style={{ background: '#FEF2F2', border: '1px solid #FCA5A5', color: '#B91C1C', padding: '1rem', borderRadius: '8px', marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 'bold' }}>
+                <AlertTriangle size={20} /> Based on your usage, you have 7 days of credits remaining for WhatsApp operations.
+            </div>
+
+            <div className="grid-2" style={{ gap: '2rem' }}>
+                {/* AI Cost OCR */}
+                <div className="table-card" style={{ padding: '2rem' }}>
+                    <h3 className="section-title text-blue">AI Cost for OCR</h3>
+                    <div className="text-h1" style={{ fontSize: '2.5rem', margin: '1rem 0' }}>₹1,250.00</div>
+                    <div className="text-muted text-sm" style={{ marginBottom: '1.5rem' }}>
+                        <div><b>Utilization Last 1 Week:</b> 450 scans</div>
+                        <div style={{ marginTop: '0.4rem' }}><b>Utilization Last 1 Month:</b> 1,200 scans</div>
+                    </div>
+                    <button className="btn-outline" style={{ width: '100%' }} onClick={() => setRechargeModal({ title: 'AI OCR Credits' })}>Recharge Balance</button>
+                </div>
+
+                {/* WhatsApp Cost */}
+                <div className="table-card" style={{ padding: '2rem' }}>
+                    <h3 className="section-title text-blue">WhatsApp Cost</h3>
+                    <div className="text-h1" style={{ fontSize: '2.5rem', margin: '1rem 0' }}>₹450.00</div>
+                    <div className="text-muted text-sm" style={{ marginBottom: '1.5rem' }}>
+                        <div><b>Remaining Capacity:</b> 900 messages</div>
+                        <div style={{ marginTop: '0.4rem', color: 'var(--status-red)', fontWeight: 'bold' }}>(0.5 INR per message)</div>
+                    </div>
+                    <button className="btn-outline" style={{ width: '100%' }} onClick={() => setRechargeModal({ title: 'WhatsApp Balance' })}>Recharge Balance</button>
+                </div>
+
+                {/* SMS Cost */}
+                <div className="table-card" style={{ padding: '2rem' }}>
+                    <h3 className="section-title text-blue">SMS Cost</h3>
+                    <div className="text-h1" style={{ fontSize: '2.5rem', margin: '1rem 0' }}>₹200.00</div>
+                    <div className="text-muted text-sm" style={{ marginBottom: '1.5rem' }}>
+                        <div><b>Remaining Capacity:</b> ~1,333 messages</div>
+                        <div style={{ marginTop: '0.4rem' }}>(0.15 INR per message)</div>
+                    </div>
+                    <button className="btn-outline" style={{ width: '100%' }} onClick={() => setRechargeModal({ title: 'SMS Balance' })}>Recharge Balance</button>
+                </div>
+
+                {/* Email Cost */}
+                <div className="table-card" style={{ padding: '2rem' }}>
+                    <h3 className="section-title text-blue">Email Cost</h3>
+                    <div className="text-h1" style={{ fontSize: '2.5rem', margin: '1rem 0' }}>₹800.00</div>
+                    <div className="text-muted text-sm" style={{ marginBottom: '1.5rem' }}>
+                        <div><b>Remaining Capacity:</b> ~15,000 emails</div>
+                        <div style={{ marginTop: '0.4rem' }}>Pricing tier completely managed.</div>
+                    </div>
+                    <button className="btn-outline" style={{ width: '100%' }} onClick={() => setRechargeModal({ title: 'Email Node Balance' })}>Recharge Balance</button>
+                </div>
+            </div>
+
+            {/* RECHARGE POPUP */}
+            {rechargeModal && (
+                <div className="modal-overlay" onClick={() => setRechargeModal(null)}>
+                    <div className="modal-content animate-slide-down" onClick={e => e.stopPropagation()} style={{ maxWidth: '400px' }}>
+                        <div className="modal-header">
+                            <h2 className="text-h1">{rechargeModal.title}</h2>
+                            <button className="btn-icon" onClick={() => setRechargeModal(null)}><X size={20} /></button>
+                        </div>
+                        <div className="modal-body">
+                            <div className="input-group">
+                                <label>Top-up Amount (INR)</label>
+                                <select id="recharge-amt" style={{ padding: '0.8rem', width: '100%', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                                    <option value="500">₹500.00</option>
+                                    <option value="1000">₹1,000.00</option>
+                                    <option value="5000">₹5,000.00</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div className="modal-footer" style={{ marginTop: '1.5rem' }}>
+                            <button className="btn-primary" style={{ width: '100%' }} onClick={() => handleRecharge(document.getElementById('recharge-amt').value)}>
+                                <CreditCard size={16} style={{ display: 'inline', marginRight: '6px' }} /> Process Payment via RazorPay
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+        </main>
+    );
+}
+
