@@ -66,8 +66,8 @@ export default function App() {
         <div className="app-container">
             {/* HEADER */}
             <header className="topbar">
-                <div className="brand" style={{ cursor: 'pointer' }} onClick={() => setCurrentView('homepage')}>
-                    <Briefcase size={22} /> JCKCA Practice Manager
+                <div className="brand" style={{ cursor: 'pointer', padding: '0' }} onClick={() => setCurrentView('homepage')}>
+                    <img src="/logo.jpg" alt="JC Kabra & Associates" style={{ height: '36px', objectFit: 'contain' }} />
                 </div>
                 <div className="topbar-right">
                     <div style={{ position: 'relative', cursor: 'pointer', color: 'var(--text-muted)' }} onClick={() => setShowNotifications(!showNotifications)}>
@@ -933,7 +933,10 @@ function LoginView({ onLogin, email, setEmail, password, setPassword }) {
     return (
         <div className="auth-wrapper animate-slide-down">
             <div className="auth-card">
-                <div style={{ textAlign: 'center', marginBottom: '2rem' }}><h1 className="auth-title"><span style={{ color: 'var(--primary-blue)', display: 'block', marginBottom: '0.5rem', fontSize: '2rem' }}>Kolabix CRM</span>for JCKCA</h1></div>
+                <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+                    <img src="/logo.jpg" alt="JC Kabra & Associates" style={{ height: '64px', objectFit: 'contain', marginBottom: '1rem' }} />
+                    <div className="text-muted font-semibold" style={{ fontSize: '0.95rem', letterSpacing: '0.5px' }}>Practice Management Portal</div>
+                </div>
                 <form onSubmit={onLogin} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                     <div><label className="text-muted font-semibold" style={{ display: 'block', marginBottom: '0.4rem' }}>Email Address</label><input type="email" value={email} onChange={e => setEmail(e.target.value)} required autoFocus /></div>
                     <div><label className="text-muted font-semibold" style={{ display: 'block', marginBottom: '0.4rem' }}>Password</label><input type="password" value={password} onChange={e => setPassword(e.target.value)} required /></div>
