@@ -670,25 +670,258 @@ function FilingFlowView({ client, type, setView, addToast }) {
 
 function ToolsHubView({ setView, clients, addToast }) {
     const [activeTool, setActiveTool] = useState(null);
+
+    const renderTool = () => {
+        if (activeTool === 'GST 3B Working Sheet') return <GSTTool3B onBack={() => setActiveTool(null)} addToast={addToast} clients={clients} />;
+        if (activeTool === 'Audit Automation') return <AuditTool onBack={() => setActiveTool(null)} addToast={addToast} clients={clients} />;
+        if (activeTool === 'IT Response Drafter') return <ITResponseTool onBack={() => setActiveTool(null)} addToast={addToast} />;
+        if (activeTool === 'GST Calculator') return <div className="text-center" style={{ padding: '3rem' }}><Calculator size={48} style={{ margin: '0 auto', opacity: 0.3 }} /><h2 className="text-h1" style={{ marginTop: '1rem' }}>GST Calculator</h2><p className="text-muted">Standard standalone calculator is currently linked inside Client GST Tracker internally.</p><br /><button className="btn-secondary" onClick={() => setActiveTool(null)}>Go Back</button></div>;
+    };
+
     return (
-        <main className="main-content animate-slide-down">
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}><button className="btn-icon" onClick={() => setView('homepage')}><ArrowLeft /></button><h2 className="text-h1">Tools & Utilities</h2></div>
+        <main className="main-content animate-slide-down" style={{ maxWidth: activeTool ? '900px' : '1200px', margin: '0 auto' }}>
+            {!activeTool && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
+                    <button className="btn-icon" onClick={() => setView('homepage')}><ArrowLeft /></button>
+                    <h2 className="text-h1">Tools & Utilities</h2>
+                </div>
+            )}
+
             {activeTool ? (
-                <div>
-                    <div className="tool-view-header"><button className="btn-icon" onClick={() => setActiveTool(null)}><ArrowLeft /></button><h2 className="text-h1">{activeTool}</h2></div>
-                    <div className="table-card" style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}><Calculator size={48} style={{ margin: '0 auto 1rem', opacity: 0.3 }} /><p>Access the {activeTool} here.</p></div>
+                <div className="animate-slide-down">
+                    {renderTool()}
                 </div>
             ) : (
                 <div className="tool-grid">
-                    <div className="tool-card"><div className="tool-icon"><Grid size={24} /></div><h3 className="section-title">GST 3B Working Sheet</h3><button className="btn-outline" onClick={() => setActiveTool('GST 3B Working Sheet')}>Open</button></div>
-                    <div className="tool-card"><div className="tool-icon"><ClipboardCheck size={24} /></div><h3 className="section-title">Audit Automation</h3><button className="btn-outline" onClick={() => setActiveTool('Audit Automation')}>Open</button></div>
-                    <div className="tool-card"><div className="tool-icon"><Calculator size={24} /></div><h3 className="section-title">GST Calculator</h3><button className="btn-outline" onClick={() => setActiveTool('GST Calculator')}>Open</button></div>
-                    <div className="tool-card"><div className="tool-icon"><FileSignature size={24} /></div><h3 className="section-title">IT Response Drafter</h3><button className="btn-outline" onClick={() => setActiveTool('IT Response Drafter')}>Open</button></div>
+                    <div className="tool-card"><div className="tool-icon"><Grid size={24} /></div><h3 className="section-title">GST 3B Working Sheet</h3><button className="btn-outline" onClick={() => setActiveTool('GST 3B Working Sheet')}>Open Engine</button></div>
+                    <div className="tool-card"><div className="tool-icon"><ClipboardCheck size={24} /></div><h3 className="section-title">Audit Automation</h3><button className="btn-outline" onClick={() => setActiveTool('Audit Automation')}>Open Engine</button></div>
+                    <div className="tool-card" style={{ opacity: 0.6 }}><div className="tool-icon"><Calculator size={24} /></div><h3 className="section-title">GST Calculator</h3><button className="btn-outline" onClick={() => setActiveTool('GST Calculator')}>Open Calculator</button></div>
+                    <div className="tool-card"><div className="tool-icon"><FileSignature size={24} /></div><h3 className="section-title">IT Response Drafter</h3><button className="btn-outline" onClick={() => setActiveTool('IT Response Drafter')}>Open Drafter</button></div>
                 </div>
             )}
         </main>
     );
 }
+
+// -----------------------------------------------------
+// GST 3B ENGINE
+// -----------------------------------------------------
+
+function GSTTool3B({ onBack, addToast, clients }) {
+    const [step, setStep] = useState(0);
+    // 0=init, 1=ocr-prompt, 2=loading, 3=data-list, 4=validating, 5=validation-res, 6=final
+
+    return (
+        <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '1rem' }}><button className="btn-icon" onClick={onBack}><ArrowLeft /></button><h2 className="text-h1">GST 3B Advanced Working Sheet</h2></div>
+
+            {step === 0 && (
+                <div className="table-card" style={{ padding: '3rem', textAlign: 'center' }}>
+                    <div style={{ display: 'flex', gap: '1.5rem', justifyContent: 'center' }}>
+                        <button className="btn-primary" style={{ padding: '1rem 2rem', fontSize: '1.1rem' }} onClick={() => setStep(1)}><UploadCloud style={{ display: 'inline', marginRight: '8px' }} /> Upload Raw GST Data</button>
+                        <button className="btn-outline" style={{ padding: '1rem 2rem', fontSize: '1.1rem' }} onClick={() => setStep(1)}><Key style={{ display: 'inline', marginRight: '8px' }} /> Fetch from Connected Tools</button>
+                    </div>
+                </div>
+            )}
+
+            {step === 1 && (
+                <div className="table-card" style={{ padding: '3rem', textAlign: 'center' }}>
+                    <h3 className="section-title text-blue" style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>Data Payload Secured. Trigger OCR Engine?</h3>
+                    <p className="text-muted" style={{ marginBottom: '2rem' }}>Applying Batch AI OCR vastly rectifies scanning artifacts and ledger discrepancies before GSTR mapping natively.</p>
+                    <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+                        <button className="btn-primary" onClick={() => { setStep(2); setTimeout(() => setStep(3), 2000) }}><ScanLine style={{ display: 'inline', marginRight: '8px' }} /> Schedule Batch OCR processing</button>
+                        <button className="btn-outline" onClick={() => { setStep(2); setTimeout(() => setStep(3), 800) }}>Skip to Validation Map</button>
+                    </div>
+                </div>
+            )}
+
+            {step === 2 && (<div className="table-card flex-center" style={{ padding: '4rem', flexDirection: 'column', gap: '1rem' }}><div className="spinner"></div><div className="font-semibold text-blue">Initializing secure line algorithms...</div></div>)}
+
+            {step === 3 && (
+                <div className="animate-slide-down">
+                    <div className="table-card" style={{ marginBottom: '1.5rem' }}>
+                        <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border-color)' }}><h3 className="section-title" style={{ margin: 0 }}>Mapped Output Liability & Input Credits</h3></div>
+                        <table className="spreadsheet-table" style={{ border: 'none', borderBottomLeftRadius: '8px', borderBottomRightRadius: '8px' }}>
+                            <thead><tr><th>Invoice / Ref#</th><th>Date Documented</th><th>Type</th><th>Taxable Worth</th><th>Input Credit Accrued</th></tr></thead>
+                            <tbody>
+                                <tr><td className="font-semibold text-blue">INV-2026/044</td><td>04-Mar-2026</td><td><span className="badge badge-yellow">B2B Outward</span></td><td>₹45,000</td><td className="text-muted">--</td></tr>
+                                <tr><td className="font-semibold text-blue">INV-2026/045</td><td>05-Mar-2026</td><td><span className="badge badge-yellow">B2B Outward</span></td><td>₹12,400</td><td className="text-muted">--</td></tr>
+                                <tr style={{ background: '#F0FDF4' }}><td className="font-semibold text-green">PUR-8822/AA</td><td>11-Mar-2026</td><td><span className="badge badge-green">Inward Input</span></td><td className="text-muted">--</td><td className="font-semibold text-green">₹14,500 ITC</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <button className="btn-primary" style={{ width: '100%', padding: '1rem', fontSize: '1.1rem' }} onClick={() => { setStep(4); setTimeout(() => setStep(5), 2000) }}><CheckSquare style={{ display: 'inline', marginLeft: '4px' }} /> Validate with Live GSTR-2A</button>
+                </div>
+            )}
+
+            {step === 4 && (<div className="table-card flex-center" style={{ padding: '4rem', flexDirection: 'column', gap: '1rem' }}><div className="spinner" style={{ borderColor: 'rgba(5, 150, 105, 0.4)', borderLeftColor: 'var(--status-green)' }}></div><div className="font-semibold text-green">Pinging external GSTN nodes securely...</div></div>)}
+
+            {step === 5 && (
+                <div className="animate-slide-down">
+                    <div className="table-card" style={{ padding: '2rem', marginBottom: '1.5rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}><h3 className="section-title" style={{ margin: 0 }}>Validation Trace vs GSTR-2A</h3><span className="badge badge-green">Validation Hook Succeeded</span></div>
+                        <div style={{ background: '#FEF2F2', border: '1px solid #FCA5A5', padding: '1rem', borderRadius: '8px', color: '#991B1B', fontWeight: 'semibold', marginBottom: '1.5rem' }}>Mismatch detected traversing 1 inbound entry: PUR-8822/AA lacking IGST conformity by ₹4,500.</div>
+                        <button className="btn-primary" style={{ width: '100%', padding: '1.25rem', fontSize: '1.1rem', background: 'var(--status-blue)', borderColor: 'var(--status-blue)' }} onClick={() => setStep(6)}>Proceed to Final Compute GST Output</button>
+                    </div>
+                </div>
+            )}
+
+            {step === 6 && (
+                <div className="animate-slide-down">
+                    <div className="table-card" style={{ background: '#F8FAFC', padding: '2.5rem', border: '1px solid #E2E8F0', marginBottom: '1.5rem' }}>
+                        <h3 className="section-title text-blue" style={{ fontSize: '1.3rem' }}>Consolidated GSTR-3B Computation</h3>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginTop: '1.5rem' }}>
+                            <div><div className="text-muted">Total Gross Output Tax</div><div className="text-h1" style={{ fontSize: '2.2rem' }}>₹1,84,000</div></div>
+                            <div><div className="text-muted">Total ITC Utilized (Post-2A Mismatch)</div><div className="text-h1 text-blue" style={{ fontSize: '2.2rem' }}>₹68,500</div></div>
+                        </div>
+                        <div style={{ borderTop: '1px solid var(--border-color)', marginTop: '1.5rem', paddingTop: '1.5rem' }}>
+                            <div className="text-muted font-semibold" style={{ letterSpacing: '1px', textTransform: 'uppercase' }}>Net GST Obligation Payable</div>
+                            <div className="text-h1 text-red" style={{ fontSize: '3.5rem' }}>₹1,15,500</div>
+                        </div>
+                    </div>
+                    <div style={{ display: 'flex', gap: '1rem' }}>
+                        <button className="btn-primary" style={{ flex: 1, padding: '1rem', fontSize: '1.1rem' }} onClick={() => addToast('Challan paid natively utilizing Kolabix Pay module.')}>✅ Pay exactly on behalf of client</button>
+                        <button className="btn-outline" style={{ flex: 1, padding: '1rem', fontSize: '1.1rem', background: 'white' }} onClick={() => addToast('Payment link generated predicting WhatsApp hook successfully.')}>💸 Request payment bridging</button>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
+
+// -----------------------------------------------------
+// AUDIT AUTOMATION ENGINE
+// -----------------------------------------------------
+
+function AuditTool({ onBack, addToast }) {
+    const [step, setStep] = useState(0);
+
+    return (
+        <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '1rem' }}><button className="btn-icon" onClick={onBack}><ArrowLeft /></button><h2 className="text-h1">Audit Scan Automation</h2></div>
+
+            {step === 0 && (
+                <div className="table-card" style={{ padding: '3rem', textAlign: 'center' }}>
+                    <div style={{ display: 'flex', gap: '1.5rem', justifyContent: 'center' }}>
+                        <button className="btn-primary" style={{ padding: '1rem 2rem', fontSize: '1.1rem' }} onClick={() => setStep(1)}><UploadCloud style={{ display: 'inline', marginRight: '8px' }} /> Upload Balance / Account Statement</button>
+                        <button className="btn-outline" style={{ padding: '1rem 2rem', fontSize: '1.1rem' }} onClick={() => setStep(1)}><Key style={{ display: 'inline', marginRight: '8px' }} /> Pull directly from external ERP Tool</button>
+                    </div>
+                </div>
+            )}
+
+            {step === 1 && (
+                <div className="table-card" style={{ padding: '3rem', textAlign: 'center' }}>
+                    <h3 className="section-title text-blue" style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>Statement Payload Loaded. Trigger OCR Pipeline?</h3>
+                    <p className="text-muted" style={{ marginBottom: '2rem' }}>Applying Batch OCR cleanses messy external ledgers preventing flag leakage down the parsing loop.</p>
+                    <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+                        <button className="btn-primary" onClick={() => { setStep(2); setTimeout(() => setStep(3), 2000) }}><ScanLine style={{ display: 'inline', marginRight: '8px' }} /> Schedule Batch OCR mapping</button>
+                        <button className="btn-outline" onClick={() => { setStep(2); setTimeout(() => setStep(3), 800) }}>Skip to keyword mapping</button>
+                    </div>
+                </div>
+            )}
+
+            {step === 2 && (<div className="table-card flex-center" style={{ padding: '4rem', flexDirection: 'column', gap: '1rem' }}><div className="spinner"></div><div className="font-semibold text-blue">Initializing native context models...</div></div>)}
+
+            {step === 3 && (
+                <div className="table-card animate-slide-down" style={{ padding: '2.5rem' }}>
+                    <h3 className="section-title text-blue" style={{ marginBottom: '1rem' }}>Audit Target Definitions</h3>
+                    <div className="text-muted" style={{ marginBottom: '1rem' }}>Inject custom query flags. AI will actively traverse the extracted document rows isolating instances of these exact patterns globally.</div>
+                    <div className="input-group" style={{ marginBottom: '2rem' }}>
+                        <label>AI Flag Keywords (Comma delineated)</label>
+                        <textarea rows="4" style={{ fontFamily: 'monospace', padding: '1rem', fontSize: '0.9rem' }} defaultValue="Director Remuneration, Suspense Account, Related Party Transaction, Unrecognized Legal Fees, Penalty Setup"></textarea>
+                    </div>
+                    <button className="btn-primary" style={{ width: '100%', padding: '1.2rem', fontSize: '1.1rem' }} onClick={() => { setStep(4); setTimeout(() => setStep(5), 2500) }}>Initiate Deep AI Document Scan</button>
+                </div>
+            )}
+
+            {step === 4 && (<div className="table-card flex-center" style={{ padding: '4rem', flexDirection: 'column', gap: '1rem' }}><div className="spinner" style={{ borderColor: 'rgba(5, 150, 105, 0.4)', borderLeftColor: 'var(--status-green)' }}></div><div className="font-semibold text-green">Mapping flags directly against ledger rows natively...</div></div>)}
+
+            {step === 5 && (
+                <div className="table-card animate-slide-down" style={{ padding: '2rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}><h3 className="section-title text-red" style={{ margin: 0 }}>Flagged Suspect Rows Identified</h3><span className="badge badge-red">3 Hot Hits Caught</span></div>
+                    <table className="spreadsheet-table" style={{ border: 'none' }}>
+                        <thead><tr><th>Spreadsheet Ref</th><th>Identified Target Cluster</th><th>Extracted Context Description</th><th>Transaction (₹)</th></tr></thead>
+                        <tbody>
+                            <tr><td><span className="font-semibold text-blue">Row 142</span></td><td><span className="badge badge-yellow">Unrecognized Legal Fees</span></td><td className="text-muted">High value legal consulting retainer flagged inside general...</td><td>₹8,50,000</td></tr>
+                            <tr style={{ background: '#FEF2F2' }}><td><span className="font-semibold text-blue">Row 211</span></td><td><span className="badge badge-red">Suspense Account</span></td><td className="text-muted">Unclaimed transfer routed via undefined holding protocol...</td><td className="font-semibold text-red">₹42,500</td></tr>
+                            <tr><td><span className="font-semibold text-blue">Row 62</span></td><td><span className="badge badge-yellow">Director Remuneration</span></td><td className="text-muted">Anomalous offset variance vs standard baseline...</td><td>₹12,00,000</td></tr>
+                        </tbody>
+                    </table>
+                    <button className="btn-outline" style={{ width: '100%', marginTop: '1rem' }} onClick={() => addToast('Audit flag mapping exported to detailed Excel cleanly', 'success')}><Download style={{ display: 'inline', marginRight: '6px' }} /> Export Audit Flags to Excel</button>
+                </div>
+            )}
+        </div>
+    );
+}
+
+// -----------------------------------------------------
+// IT RESPONSE DRAFTER
+// -----------------------------------------------------
+
+function ITResponseTool({ onBack, addToast }) {
+    const [step, setStep] = useState(0);
+    const [draftOpen, setDraftOpen] = useState(false);
+    const [notice, setNotice] = useState('143(1) - Intimation on mismatch');
+
+    return (
+        <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '1rem' }}><button className="btn-icon" onClick={onBack}><ArrowLeft /></button><h2 className="text-h1">AI Notice Response Drafter</h2></div>
+
+            {step === 0 && (
+                <div className="table-card animate-slide-down" style={{ padding: '3rem' }}>
+                    <div className="input-group" style={{ marginBottom: '1.5rem' }}>
+                        <label>Select Identified IT Notice Node Classification</label>
+                        <select value={notice} onChange={e => setNotice(e.target.value)} style={{ padding: '0.8rem', borderRadius: '8px', width: '100%' }}>
+                            <option value="143(1) - Intimation on mismatch">Section 143(1) - Discrepancy / Intimation Node</option>
+                            <option value="142(1) - Inquiry before assessment">Section 142(1) - Inquiry preceding formal mapping</option>
+                            <option value="148 - Income escaping assessment">Section 148 - Escaping standard profiling flag</option>
+                            <option value="Generic Scrutiny Notice">Generic Scrutiny Request Format</option>
+                        </select>
+                    </div>
+                    <div className="text-muted font-semibold" style={{ marginBottom: '0.5rem' }}>Upload Original Notice PDF / Text Scan</div>
+                    <div style={{ border: '2px dashed var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '120px', borderRadius: '8px', marginBottom: '2rem', background: '#F8FAFC' }}>
+                        <button className="btn-secondary"><FileText style={{ display: 'inline', marginRight: '4px' }} /> Select PDF Document</button>
+                    </div>
+                    <button className="btn-primary" style={{ width: '100%', padding: '1rem', fontSize: '1.1rem' }} onClick={() => { setStep(1); setTimeout(() => setStep(2), 2500) }}><ScanLine style={{ display: 'inline', marginRight: '8px' }} /> Parse Notice Structurally</button>
+                </div>
+            )}
+
+            {step === 1 && (<div className="table-card flex-center animate-slide-down" style={{ padding: '4rem', flexDirection: 'column', gap: '1rem' }}><div className="spinner"></div><div className="font-semibold text-blue">Translating legalese parsing structures into prompt anchors...</div></div>)}
+
+            {step === 2 && (
+                <div className="table-card animate-slide-down" style={{ padding: '3rem', textAlign: 'center' }}>
+                    <div style={{ color: 'var(--status-green)', marginBottom: '1rem' }}><CheckSquare size={48} style={{ margin: '0 auto' }} /></div>
+                    <h3 className="text-h1" style={{ fontSize: '1.8rem', marginBottom: '1rem' }}>Parsing Complete. Context Locked.</h3>
+                    <p className="text-muted" style={{ maxWidth: '60%', margin: '0 auto 2rem' }}>The document strictly identifies as functionally aligned with [{notice}]. The AI has located key parameters required to automatically draft the required authoritative payload.</p>
+                    <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+                        <button className="btn-primary" style={{ padding: '1rem 2rem', fontSize: '1.1rem' }} onClick={() => setDraftOpen(true)}>Generate Canned Notice Reply Template</button>
+                    </div>
+                </div>
+            )}
+
+            {draftOpen && (
+                <div className="modal-overlay" onClick={() => setDraftOpen(false)}>
+                    <div className="modal-content animate-slide-down" onClick={e => e.stopPropagation()} style={{ maxWidth: '700px' }}>
+                        <div className="modal-header" style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '1rem', marginBottom: '1rem' }}>
+                            <div><h2 className="text-h1 text-blue" style={{ fontSize: '1.25rem' }}>Draft Payload Generation</h2><div className="text-sm text-muted">Response aligned to target: {notice}</div></div>
+                            <button className="btn-icon" onClick={() => setDraftOpen(false)}><X size={20} /></button>
+                        </div>
+                        <div className="modal-body">
+                            <textarea id="draft-reply-txt" rows="18" style={{ width: '100%', padding: '1rem', fontFamily: 'monospace', fontSize: '0.85rem', lineHeight: '1.5', border: '1px solid var(--border-color)', borderRadius: '8px' }} readOnly defaultValue={`To,\nThe Assessing Officer / Centralized Processing Centre,\nIncome Tax Department,\n[Location].\n\nSub: Response to Notice u/s ${notice.split(' - ')[0]} for AY [AY_YEAR]\nRef: Notice Reference Number: [NOTICE_REF] Details Date: [NOT_DATE]\n\nDear Sir/Madam,\n\nWe refer to the intimation dispatched gracefully mapped across our native PAN locus structurally.\n\nRegarding the flag denoting structural anomaly located precisely isolating discrepancies natively within line item mapping, we submit respectfully that the original return mapped accurately to certified internal records utilizing formal GST/TDS offsets efficiently. The proposed mismatch is an artificial logic glitch owing specifically to external portal timing variables overlapping aggressively across compliance boundaries.\n\nWe request the algorithm be reset gracefully aligning closely bypassing penal implications officially terminating this string without prejudice.\n\nSincerely,\nFor [CLIENT NAME]\n\nAuthorized Signatory (Via JC Kabra & Associates)`}></textarea>
+                        </div>
+                        <div className="modal-footer" style={{ marginTop: '1.5rem', display: 'flex', justifyContent: 'space-between', borderTop: '1px solid var(--border-color)', paddingTop: '1rem' }}>
+                            <button className="btn-outline" onClick={() => setDraftOpen(false)}>Refine Prompt Locally</button>
+                            <button className="btn-primary" onClick={() => { navigator.clipboard.writeText(document.getElementById('draft-reply-txt').value); addToast('Draft copied directly to OS clipboard successfully.'); setDraftOpen(false); }}><Check style={{ display: 'inline', marginRight: '4px' }} /> Copy Final Draft to Clipboard</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+        </div>
+    );
+}
+
+// -----------------------------------------------------
 
 function LoginView({ onLogin, email, setEmail, password, setPassword }) {
     return (
