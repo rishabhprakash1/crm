@@ -393,6 +393,13 @@ function ClientDetailView({ client, setView, addToast, onStartFiling }) {
         });
     }, [year]);
 
+    const mockCommunications = [
+        { id: 1, title: 'GST Document Reminder (GSTR-3B)', date: 'April 2026', whatsapp: true, sms: true, email: true },
+        { id: 2, title: 'ITR Document Reminder (AY 25-26)', date: 'May 2025', whatsapp: false, sms: true, email: true },
+        { id: 3, title: 'TDS Deduction Challan Alert', date: 'March 2026', whatsapp: true, sms: false, email: false },
+        { id: 4, title: 'Client Meeting Scheduled Notification', date: 'January 2026', whatsapp: true, sms: false, email: true }
+    ];
+
     return (
         <main className="main-content animate-slide-down" style={{ maxWidth: '1400px', margin: '0 auto' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
@@ -417,7 +424,7 @@ function ClientDetailView({ client, setView, addToast, onStartFiling }) {
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', borderBottom: '2px solid var(--border-color)', marginBottom: '2rem' }}>
                 <div className="tabs" style={{ borderBottom: 'none', marginBottom: '-2px', gap: '1.5rem' }}>
-                    {['Taxation', 'TDS', 'GST', 'Invoice'].map(t => (
+                    {['Taxation', 'TDS', 'GST', 'Invoice', 'Communications'].map(t => (
                         <div key={t} className={`tab ${tab === t ? 'active' : ''}`} style={{ fontSize: '1.1rem', padding: '0.75rem 1rem' }} onClick={() => setTab(t)}>
                             {t === 'Taxation' ? taxType : t}
                         </div>
@@ -492,6 +499,45 @@ function ClientDetailView({ client, setView, addToast, onStartFiling }) {
                                 <td></td>
                             </tr>
                         </tfoot>
+                    </table>
+                </div>
+            )}
+
+            {tab === 'Communications' && (
+                <div className="table-card animate-slide-down">
+                    <table className="spreadsheet-table" style={{ border: 'none' }}>
+                        <thead>
+                            <tr>
+                                <th>Communication Subject / Context</th>
+                                <th>Period / Action Date</th>
+                                <th>Delivery Channels Sent</th>
+                                <th>Verification</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {mockCommunications.map(comm => (
+                                <tr key={comm.id}>
+                                    <td className="font-semibold text-blue">{comm.title}</td>
+                                    <td className="text-muted">{comm.date}</td>
+                                    <td>
+                                        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                                            <span style={{ color: comm.whatsapp ? '#03543F' : '#9CA3AF', opacity: comm.whatsapp ? 1 : 0.4, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                {comm.whatsapp && <Check size={14} />} WhatsApp
+                                            </span>
+                                            <span style={{ color: comm.sms ? '#03543F' : '#9CA3AF', opacity: comm.sms ? 1 : 0.4, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                {comm.sms && <Check size={14} />} SMS
+                                            </span>
+                                            <span style={{ color: comm.email ? '#03543F' : '#9CA3AF', opacity: comm.email ? 1 : 0.4, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                {comm.email && <Check size={14} />} Email
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <button className="btn-outline" style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem' }} onClick={() => addToast('Communication successfully re-dispatched!', 'success')}>Resend</button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
                     </table>
                 </div>
             )}
